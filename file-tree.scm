@@ -282,7 +282,6 @@
       prompt
       (lambda (result)
         (define new-name (string-append (trim-start-matches prompt "New : ") result))
-        ; FIXME: if new-name end with / create direcotry
         (if (ends-with? new-name #\/)
           (create-directory new-name)
           (create-file new-name))
