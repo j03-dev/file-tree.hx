@@ -47,7 +47,7 @@
         comparator))))
 
 ;;; -------------------------------------------------------------------
-;;;
+;;; Checks if a string ends with a specific character.
 (define (ends-with? s c)
   (define len (string-length s))
   (and (> len 0)
