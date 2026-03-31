@@ -96,7 +96,7 @@
       "C-a"
       'no_op
       "C-x"
-      ':buffer-close!
+      'no_op
       "a"
       'no_op
       "I"
