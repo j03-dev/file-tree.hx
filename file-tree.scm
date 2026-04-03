@@ -96,7 +96,7 @@
       "C-a"
       'no_op
       "C-x"
-      'no_op
+      ':buffer-close!
       "a"
       'no_op
       "I"
@@ -117,7 +117,7 @@
       ':unfold-all-one-level
       "o"
       ':open-file-from-picker
-      "n"
+      "a"
       ':create-new-file-or-directory
       "F"
       ':fold-all)))
