@@ -57,6 +57,7 @@
   unfold-all-one-level
   open-file-from-picker
   create-new-file-or-directory
+  delete-file-and-directory
   fold-all
   FILE-TREE
   FILE-TREE-KEYBINDINGS
@@ -106,7 +107,7 @@
       "O"
       'no_op
       "d"
-      'no_op
+      ':delete-file-and-directory
       "A-d"
       'no_op
       "F"
@@ -286,12 +287,30 @@
           (create-directory new-name)
           (create-file new-name))
 
-        (display new-name)
-
         ;; TODO:
         ;; This is happening before the write is finished, so its not working. We will have to manually insert
         ;; the new file into the right spot in the tree, which would require rewriting this to have a proper sorted
         ;; tree representation in memory, which we don't yet have. For now, we can just do this I guess
+        (enqueue-thread-local-callback refresh-file-tree)))))
+
+;; FIXME: runtime error
+;; when i delete something: i have out of bound char panic from rust
+(define (delete-file-and-directory)
+  (when (currently-in-labelled-buffer? FILE-TREE)
+    (define currently-selected (list-ref *file-tree* (helix.static.get-current-line-number)))
+    (define prompt
+      (if (is-dir? currently-selected)
+        (string-append "Remove " currently-selected "/" " (y/N): ")
+        (string-append "Remove " currently-selected " (y/N): ")))
+    (helix-prompt!
+      prompt
+      (lambda (result)
+        (if (equal? result "y")
+          (let ([path (trim-end-matches
+                       (trim-start-matches prompt "Remove ")
+                       " (y/N): ")])
+            (helix.run-shell-command (string-append "rm -r " path)))
+          (display "cancel"))
         (enqueue-thread-local-callback refresh-file-tree)))))
 
 (define (update-file-tree)
