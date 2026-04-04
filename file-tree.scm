@@ -267,8 +267,7 @@
 ;;@doc
 ;; Create a new directory
 (define (create-directory directory-name)
-  (hx.create-directory directory-name)
-  (enqueue-thread-local-callback refresh-file-tree))
+  (hx.create-directory directory-name))
 
 (define (create-new-file-or-directory)
   (when (currently-in-labelled-buffer? FILE-TREE)
@@ -293,8 +292,8 @@
         ;; tree representation in memory, which we don't yet have. For now, we can just do this I guess
         (enqueue-thread-local-callback refresh-file-tree)))))
 
-;; FIXME: runtime error
-;; when i delete something: i have out of bound char panic from rust
+;;@doc
+;; Delete file or directory
 (define (delete-file-and-directory)
   (when (currently-in-labelled-buffer? FILE-TREE)
     (define currently-selected (list-ref *file-tree* (helix.static.get-current-line-number)))
@@ -305,42 +304,30 @@
     (helix-prompt!
       prompt
       (lambda (result)
+        (define path (trim-end-matches (trim-start-matches prompt "Remove ") " (y/N): "))
         (if (equal? result "y")
-          (let ([path (trim-end-matches
-                       (trim-start-matches prompt "Remove ")
-                       " (y/N): ")])
-            (helix.run-shell-command (string-append "rm -r " path)))
+          (helix.run-shell-command (string-append "rm -r " path))
           (display "cancel"))
         (enqueue-thread-local-callback refresh-file-tree)))))
 
 (define (update-file-tree)
+  (let ([last-mode (editor-mode)]
+        ;; Save only the NUMBER of the line, not the selection object
+        [old-line (helix.static.get-current-line-number)])
 
-  (define current-selection (helix.static.current-selection-object))
-  ; (define line-number (helix.static.get-current-line-number))
-  (define last-mode (editor-mode))
+    (helix.static.select_all)
+    (helix.static.delete_selection)
 
-  (helix.static.select_all)
-  (helix.static.delete_selection)
+    (set! *file-tree*
+      (tree (helix-find-workspace)
+        (lambda (str)
+          (helix.static.insert_string str)
+          (helix.static.open_below)
+          (helix.static.goto_line_start))))
 
-  ;; Update the current file tree value
-  (set! *file-tree*
-    (tree (helix-find-workspace)
-      (lambda (str)
-        (helix.static.insert_string str)
-        (helix.static.open_below)
-        (helix.static.goto_line_start))))
+    (helix.static.goto_file_start)
 
-  ;; Set it BACK to where we were previously!
-  ;; TODO: Currently the following bug exists:
-  ;; Open helix, open file tree, run SPC-b to open the file tree
-  ;; buffer (there should now be two of them). Press TAB, then F.
-  ;; Helix will crash. One way to fix it is to not update the selection,
-  ;; however that makes the file tree experience way worse. A better
-  ;; way for now is to just disallow that command in the file tree
-  ;; buffer since I haven't yet figured out how to get it working.
-  (helix.static.set-current-selection-object! current-selection)
-
-  (editor-set-mode! last-mode))
+    (editor-set-mode! last-mode)))
 
 (define (refresh-file-tree)
   (temporarily-switch-focus (lambda ()
