@@ -233,13 +233,7 @@
       (helix.static.select_all)
       (helix.static.delete_selection)
 
-      ;; Update the current file tree value
-      (set! *file-tree*
-        (tree (helix-find-workspace)
-          (lambda (str)
-            (helix.static.insert_string str)
-            (helix.static.open_below)
-            (helix.static.goto_line_start)))))))
+      (updated_current_file_value))))
 
 ;;@doc
 ;; Fold the directory that we're currently hovering over
@@ -269,6 +263,8 @@
 (define (create-directory directory-name)
   (hx.create-directory directory-name))
 
+;;@doc
+;; Create a new file or directory
 (define (create-new-file-or-directory)
   (when (currently-in-labelled-buffer? FILE-TREE)
     (define currently-selected (list-ref *file-tree* (helix.static.get-current-line-number)))
@@ -291,6 +287,14 @@
         ;; the new file into the right spot in the tree, which would require rewriting this to have a proper sorted
         ;; tree representation in memory, which we don't yet have. For now, we can just do this I guess
         (enqueue-thread-local-callback refresh-file-tree)))))
+
+(define (updated_current_file_value)
+  (set! *file-tree*
+    (tree (helix-find-workspace)
+      (lambda (str)
+        (helix.static.insert_string str)
+        (helix.static.open_below)
+        (helix.static.goto_line_start)))))
 
 ;;@doc
 ;; Delete file or directory
@@ -325,7 +329,7 @@
           (helix.static.open_below)
           (helix.static.goto_line_start))))
 
-    (helix.static.goto_file_start)
+    (helix.goto-line old-line)
 
     (editor-set-mode! last-mode)))
 
