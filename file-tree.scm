@@ -155,7 +155,7 @@
     (if (hash-try-get *directories* path) ">  " "v  ")
     ">  ")) ;; First time we're visiting, mark as closed
 
-(define *extension-map* (hash "rs" " " "scm" "󰘧 " "cpp" "󰙲 " "go" "󰟓 " "py" "󰌠 " "md" "󰍔 " "dockerfile" "󰡨 "))
+(define *extension-map* (hash "rs" " " "scm" "󰘧 " "cpp" "󰙲 " "go" "󰟓 " "py" "󰌠 " "md" "󰍔 " "dockerfile" "󰡨 " "html" "󰌝 " "tera" "󰌝 " "jinja" "󰌝 " "yaml" "󰈙 " "css" "󰌜 " "js" "󰌞 " "ts" "󰛦 "))
 
 (define (path->symbol path)
   (let ([extension (path->extension path)])
